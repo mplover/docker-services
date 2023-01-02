@@ -1,0 +1,85 @@
+version: "3.6"
+services:
+  homeassistant:
+    container_name: "homeassistant"
+    image: "homeassistant/home-assistant:stable"
+    network_mode: "host"
+    restart: "unless-stopped"
+    volumes:
+      - "/usr/share/hassio/homeassistant:/config"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+  mosquitto:
+    container_name: "mosquitto"
+    hostname: "mosquitto"
+    image: "eclipse-mosquitto"
+    networks:
+      - "smarthome"
+    ports:
+      - "1883:1883/tcp"
+      - "9001:9001/tcp"
+    restart: "unless-stopped"
+    volumes:
+      - "/usr/share/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf"
+      - "/usr/share/mqtt/data:/mosquitto/data"
+      - "/usr/share/mqtt/log:/mosquitto/log"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+  node-red:
+    container_name: "node-red"
+    environment:
+      - "TZ=America/New_York"
+    image: "nodered/node-red"
+    network_mode: "host"
+    ports:
+      - "1880:1880/tcp"
+    restart: "unless-stopped"
+    user: "node-red"
+    volumes:
+      - "/usr/share/node-red:/data"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+  ring-mqtt:
+    container_name: "ring-mqtt"
+    env_file:
+      - ring-mqtt.env
+    image: "tsightler/ring-mqtt"
+    networks:
+      - "smarthome"
+    ports:
+      - "8554:8554"
+      - "55123:55123"
+    restart: "unless-stopped"
+    volumes:
+      - "/usr/share/ring-mqtt:/data"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+  zwavejs:
+    container_name: zwave-js-ui
+    image: zwavejs/zwave-js-ui:latest
+    restart: unless-stopped
+    tty: true
+    stop_signal: SIGINT
+    environment:
+      - SESSION_SECRET=BB1226E7973E857DFDD289E395DCD
+      - ZWAVEJS_EXTERNAL_CONFIG=/usr/src/app/store/.config-db
+      - TZ=America/New_York
+    networks:
+      - smarthome
+    devices:
+      - '/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00:/dev/zwave'
+    volumes:
+      - /usr/share/zwavejs:/usr/src/app/store
+    ports:
+      - '8091:8091'
+      - '3000:3000'
+networks:
+  smarthome:
