@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  globalping:
+    container_name: globalping
+    image: ghcr.io/jsdelivr/globalping-probe
+    restart: unless-stopped
+    network_mode: "host"
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
